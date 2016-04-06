@@ -4,28 +4,28 @@ const q = require('q');
 const _ = require('lodash');
 
 const OPTION_CUSTOM_PROPERTY_PARENT = '#parent';
-const OPTION_CUSTOM_PROPERTY_CHAIN  = '#chain';
+const OPTION_CUSTOM_PROPERTY_CHAIN = '#chain';
 
 const MODEL_METHOD_FIND_ONE = 'findOne';
-const MODEL_METHOD_FIND     = 'find';
+const MODEL_METHOD_FIND = 'find';
 
 const COLLECTION_FIELD_PARENT_ID_CATEGORY = 'parent_id';
-const COLLECTION_FIELD_PARENT_ID_ELEMENT  = 'parent_id'; // @todo
+const COLLECTION_FIELD_PARENT_ID_ELEMENT = 'parent_id'; // @todo
 
 const CHAIN_SEPARATOR = '/';
 
 module.exports = class {
 
     // TODO
-    //static ACTION_ADD = 'add';
+    // static ACTION_ADD = 'add';
     //
-    //static ACTION_EDIT = 'edit'
+    // static ACTION_EDIT = 'edit'
     //
-    //static ACTION_DELETE = 'delete';
+    // static ACTION_DELETE = 'delete';
 
     constructor(entityAlias) {
         this._entityAlias = entityAlias;
-        this._modelName   = entityAlias; // @todo
+        this._modelName = entityAlias; // @todo
     }
 
     _getEntityAlias() {
@@ -49,7 +49,7 @@ module.exports = class {
 
     _find(options, isOne) {
         const parentOptions = this._getParentOptions(options);
-        const method        = (isOne)
+        const method = (isOne)
             ? MODEL_METHOD_FIND_ONE
             : MODEL_METHOD_FIND;
 
@@ -74,23 +74,22 @@ module.exports = class {
             result = this._getCurrent(method, options);
         }
 
-        return result.then((result) => {
+        return result.then(data => {
             this._sendResponse404IfItemIsNull(
-                result,
+                data,
                 'Item(s) not found',
                 options
             );
 
-            return result;
+            return data;
         });
     }
 
     _findOne(options) {
-        return this._find(options, true)
+        return this._find(options, true);
     }
 
     _findTree(options) {
-
         return this
             ._find(options)
             .then((items) => {
@@ -112,6 +111,7 @@ module.exports = class {
                                     item.children = children[item._id]; // @todo
                                 }
 
+
                                 return item;
                             });
                     }));
@@ -120,7 +120,7 @@ module.exports = class {
                 }
 
                 return result;
-            })
+            });
     }
 
     _findChain(options) {
@@ -147,7 +147,6 @@ module.exports = class {
     }
 
     _getCurrent(method, options) {
-
         return this
             ._processOptionsCustomPropertiesAndFind(
                 this._getModelName(),
@@ -155,16 +154,14 @@ module.exports = class {
                 options
             )
             .then((item) => {
-
                 return (Array.isArray(item))
-                    ?  this._getNumberСhildren(item)
+                    ? this._getNumberChildren(item)
                     : item;
 
             });
     }
 
     _getParent(options) {
-
         return this._processOptionsCustomPropertiesAndFind(
             this._getModelName(),
             MODEL_METHOD_FIND_ONE,
@@ -178,7 +175,9 @@ module.exports = class {
 
         _.forEach(options.filter, (filterItem, property) => {
 
-            if (_.isPlainObject(filterItem) && filterItem.hasOwnProperty(OPTION_CUSTOM_PROPERTY_CHAIN)) {
+            if (_.isPlainObject(filterItem)
+                && filterItem.hasOwnProperty(OPTION_CUSTOM_PROPERTY_CHAIN)
+            ) {
                 delete options.filter[property];
 
                 result = this._getChain(
@@ -205,8 +204,8 @@ module.exports = class {
             ? _.clone(chain)
             : chain.split(CHAIN_SEPARATOR);
 
-        const parentFieldId   = COLLECTION_FIELD_PARENT_ID_CATEGORY;
-        const lastIndex       = chain.length - 2;
+        const parentFieldId = COLLECTION_FIELD_PARENT_ID_CATEGORY;
+        const lastIndex = chain.length - 2;
         let firstChainOptions = {
             filter : {
                 alias : chain.shift()
@@ -218,10 +217,9 @@ module.exports = class {
         }
 
         let chains = [];
-        const find = (method, options) => {
-
+        const find = (methodName, params) => {
             return this
-                ._getModelResult(method, options, modelName)
+                ._getModelResult(methodName, params, modelName)
                 .then((result) => {
 
                     if (!isReturnOnlyLast) {
@@ -230,7 +228,7 @@ module.exports = class {
 
                     return result;
                 });
-        }
+        };
 
         let result = find(MODEL_METHOD_FIND_ONE, firstChainOptions, modelName);
 
@@ -246,15 +244,15 @@ module.exports = class {
                         modelName
                     );
 
-                    if (index == lastIndex) {
+                    if (index === lastIndex) {
 
                         if (options.hasOwnProperty('filter') // @todo
                             && options.filter.hasOwnProperty(parentFieldId)
-                            && options.filter[parentFieldId] != parent._id
+                            && options.filter[parentFieldId] !== parent._id
                         ) {
                             this._response.send404([
                                 'Not correct filter, parents isn`t equals: ',
-                                options.filter[parentFieldId] != parent._id,
+                                options.filter[parentFieldId] !== parent._id,
                                 '. Filter: ',
                                 JSON.stringify(options)
                             ]);
@@ -267,14 +265,14 @@ module.exports = class {
                         }
                     } else {
                         childOptions = {
-                            filter: {}
+                            filter : {}
                         };
                     }
 
                     childOptions.filter[field] = value;
                     childOptions.filter[parentFieldId] = parent._id;
 
-                    const currentMethod = (index == lastIndex)
+                    const currentMethod = (index === lastIndex)
                         ? method
                         : MODEL_METHOD_FIND_ONE;
 
@@ -282,53 +280,42 @@ module.exports = class {
                 });
         });
 
-        return result.then((result) => {
-
-            if (!isReturnOnlyLast) {
-                result = chains;
-            }
-
-            return result;
-        });
+        return result.then(data => (isReturnOnlyLast) ? data : chains);
     }
 
     // @todo optional
-    _getNumberСhildren(items) {
+    _getNumberChildren(items) {
         const categoriesId = items.map((item) => {
             return item._id;
         });
 
         const aggregate = () => {
             const fieldName = 'parent_id';
-            let match      = {};
+            let match = {};
 
             match[fieldName] = {
-                $in: categoriesId
+                $in : categoriesId
             };
 
             return this._getModelResult('aggregate', [
                 {
-                    $match: match
+                    $match : match
                 },
                 {
-                    $group: {
-                        _id: {
-                            parent_id:   '$' + fieldName,
-                            is_category: '$is_category' // @todo
+                    $group : {
+                        _id : {
+                            parent_id : '$' + fieldName,
+                            is_category : '$is_category' // @todo
                         },
-                        num: {
-                            $sum: 1
+                        num : {
+                            $sum : 1
                         }
                     }
                 }
             ]);
-        }
+        };
 
-        return aggregate()
-            .then((result) => {
-
-                return this._getItemsWithNumChildren(items, result);
-            });
+        return aggregate().then(result => this._getItemsWithNumChildren(items, result));
     }
 
     _getItemsWithNumChildren(items, numChildren) {
@@ -336,7 +323,7 @@ module.exports = class {
 
         _.forEach(numChildren, (value) => {
             const group = value._id;
-            const key   = (group.is_category)
+            const key = (group.is_category)
                 ? 'categories'
                 : 'elements';
 
@@ -351,9 +338,9 @@ module.exports = class {
 
             if (!item.hasOwnProperty('num')) {
                 item.num = {
-                    categories: 0,
-                    elements:   0,
-                    children:   0
+                    categories : 0,
+                    elements : 0,
+                    children : 0
                 };
             }
 
@@ -361,7 +348,7 @@ module.exports = class {
                 const itemNumChildren = numChildrenKeyParentId[item._id];
 
                 _.forEach(itemNumChildren, (num, key) => {
-                    item.num[key]      = num;
+                    item.num[key] = num;
                     item.num.children += num;
                 });
             }
@@ -377,8 +364,8 @@ module.exports = class {
             && options.filter.hasOwnProperty(OPTION_CUSTOM_PROPERTY_PARENT)
         ) {
             result = {
-                filter: options.filter[OPTION_CUSTOM_PROPERTY_PARENT]
-            }
+                filter : options.filter[OPTION_CUSTOM_PROPERTY_PARENT]
+            };
         }
 
         return result;
@@ -397,7 +384,6 @@ module.exports = class {
     }
 
     _getParentFieldId() {
-
         return (this._isCategoryEntity)
             ? COLLECTION_FIELD_PARENT_ID_CATEGORY
             : COLLECTION_FIELD_PARENT_ID_ELEMENT;
@@ -405,7 +391,7 @@ module.exports = class {
 
     _sendResponse404IfItemIsNull(item, error, options, modelName) {
 
-        if (null === item) {
+        if (item === null) {
 
             if (!modelName) {
                 modelName = this._getModelName();
@@ -419,13 +405,13 @@ module.exports = class {
                 JSON.stringify(options)
             ].join(' '));
 
-            //this._response.send404([
+            // this._response.send404([
             //    error + '.',
             //    'Model:',
             //    modelName + '.',
             //    'Filter:',
             //    JSON.stringify(options)
-            //].join(' '));
+            // ].join(' '));
         }
     }
 

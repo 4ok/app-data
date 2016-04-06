@@ -1,6 +1,6 @@
 'use strict';
 
-const q      = require('q');
+const q = require('q');
 const Entity = require('./abstract/entity');
 
 const MENU_ITEM_CHILDREN_PROPERTY = 'children';
@@ -12,7 +12,7 @@ module.exports = class extends Entity {
     }
 
     treeAction(options) {
-        const equals    = {};
+        const equals = {};
         const childProp = MENU_ITEM_CHILDREN_PROPERTY;
         let controllerName;
         let menu;
@@ -27,13 +27,14 @@ module.exports = class extends Entity {
                     .reduce((result, item, index) => {
 
                         if (item[childProp]) {
-                            const childParams     = item[childProp];
-                            const method          = childParams.method.split('/');
-                            controllerName        = method[0];
-                            const actionName      = (method[1] || 'index') + 'Action';
+                            const childParams = item[childProp];
+                            const method = childParams.method.split('/');
+
+                            controllerName = method[0];
+                            const actionName = (method[1] || 'index') + 'Action';
                             const controllersPath = './' + controllerName;
-                            const Controller      = require(controllersPath);
-                            const controller      = new Controller(this._http);
+                            const Controller = require(controllersPath);
+                            const controller = new Controller(this._http);
 
                             equals[index] = item.alias;
                             result.push(controller[actionName](childParams.params));
@@ -45,12 +46,13 @@ module.exports = class extends Entity {
                 return q.all(promises);
             })
             .then(children => {
-                let items        = menu.items;
-                let childrenHash = children.reduce((result, items, index) => {
+                const childrenHash = children.reduce((result, items, index) => {
                     result[equals[index]] = items;
 
                     return result;
                 }, {});
+
+                const items = menu.items;
 
                 items.map(item => {
 
@@ -89,7 +91,11 @@ module.exports = class extends Entity {
             }
 
             if (item[childProp]) {
-                result[childProp] = this._getMenuItems(item[childProp], controllerName, result.path);
+                result[childProp] = this._getMenuItems(
+                    item[childProp],
+                    controllerName,
+                    result.path
+                );
             }
 
             return result;
