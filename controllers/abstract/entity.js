@@ -31,7 +31,8 @@ module.exports = class extends Index {
     }
 
     listAction(options) {
-        const remove = this.removeAction(options);
+        // const remove = this.removeAction(options);
+        const remove = false;
         const find = this._find.bind(this, options);
 
         return (remove)
