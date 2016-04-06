@@ -58,7 +58,7 @@ module.exports = class {
         if (parentOptions) {
             result = this
                 ._getParent(parentOptions)
-                .then((parent) => {
+                .then(parent => {
                     this._sendResponse404IfItemIsNull(
                         parent,
                         'Parent item not found',
@@ -92,18 +92,18 @@ module.exports = class {
     _findTree(options) {
         return this
             ._find(options)
-            .then((items) => {
+            .then(items => {
                 let result;
 
                 if (items.length) {
-                    result = q.all(items.map((item) => {
+                    result = q.all(items.map(item => {
                         const childrenOptions = options;
 
                         childrenOptions.filter.parent_id = item._id;
 
                         return this
                             ._findTree(childrenOptions)
-                            .then((children) => {
+                            .then(children => {
 
                                 if (children.length) {
                                     children = _.groupBy(children, 'parent_id');
@@ -153,11 +153,14 @@ module.exports = class {
                 method,
                 options
             )
-            .then((item) => {
-                return (Array.isArray(item))
-                    ? this._getNumberChildren(item)
-                    : item;
+            .then(item => {
+                let result = item;
 
+                if (Array.isArray(item)) {
+                    result = this._getNumberChildren(item);
+                }
+
+                return result;
             });
     }
 
@@ -208,19 +211,19 @@ module.exports = class {
         const lastIndex = chain.length - 2;
         let firstChainOptions = {
             filter : {
-                alias : chain.shift()
-            }
+                alias : chain.shift(),
+            },
         };
 
         if (!chain.length) {
             firstChainOptions = Object.assign(options, firstChainOptions);
         }
 
-        let chains = [];
-        const find = (methodName, params) => {
-            return this
+        const chains = [];
+        const find = (methodName, params) =>
+            this
                 ._getModelResult(methodName, params, modelName)
-                .then((result) => {
+                .then(result => {
 
                     if (!isReturnOnlyLast) {
                         chains.push(result);
@@ -228,13 +231,12 @@ module.exports = class {
 
                     return result;
                 });
-        };
 
         let result = find(MODEL_METHOD_FIND_ONE, firstChainOptions, modelName);
 
         chain.forEach((value, index) => {
             result = result
-                .then((parent) => {
+                .then(parent => {
                     let childOptions;
 
                     this._sendResponse404IfItemIsNull(
@@ -254,7 +256,7 @@ module.exports = class {
                                 'Not correct filter, parents isn`t equals: ',
                                 options.filter[parentFieldId] !== parent._id,
                                 '. Filter: ',
-                                JSON.stringify(options)
+                                JSON.stringify(options),
                             ]);
                         }
 
@@ -265,7 +267,7 @@ module.exports = class {
                         }
                     } else {
                         childOptions = {
-                            filter : {}
+                            filter : {},
                         };
                     }
 
@@ -280,38 +282,43 @@ module.exports = class {
                 });
         });
 
-        return result.then(data => (isReturnOnlyLast) ? data : chains);
+        return result.then(data => {
+            let res = chains;
+
+            if (isReturnOnlyLast) {
+                res = data;
+            }
+
+            return res;
+        });
     }
 
     // @todo optional
     _getNumberChildren(items) {
-        const categoriesId = items.map((item) => {
-            return item._id;
-        });
-
+        const categoriesId = items.map(item => item._id);
         const aggregate = () => {
             const fieldName = 'parent_id';
-            let match = {};
+            const match = {};
 
             match[fieldName] = {
-                $in : categoriesId
+                $in : categoriesId,
             };
 
             return this._getModelResult('aggregate', [
                 {
-                    $match : match
+                    $match : match,
                 },
                 {
                     $group : {
                         _id : {
                             parent_id : '$' + fieldName,
-                            is_category : '$is_category' // @todo
+                            is_category : '$is_category', // @todo
                         },
                         num : {
-                            $sum : 1
-                        }
-                    }
-                }
+                            $sum : 1,
+                        },
+                    },
+                },
             ]);
         };
 
@@ -319,9 +326,9 @@ module.exports = class {
     }
 
     _getItemsWithNumChildren(items, numChildren) {
-        let numChildrenKeyParentId = {};
+        const numChildrenKeyParentId = {};
 
-        _.forEach(numChildren, (value) => {
+        _.forEach(numChildren, value => { // TODO
             const group = value._id;
             const key = (group.is_category)
                 ? 'categories'
@@ -334,13 +341,13 @@ module.exports = class {
             numChildrenKeyParentId[group.parent_id][key] = value.num;
         });
 
-        return items.map((item) => {
+        return items.map(item => {
 
             if (!item.hasOwnProperty('num')) {
                 item.num = {
                     categories : 0,
                     elements : 0,
-                    children : 0
+                    children : 0,
                 };
             }
 
@@ -364,7 +371,7 @@ module.exports = class {
             && options.filter.hasOwnProperty(OPTION_CUSTOM_PROPERTY_PARENT)
         ) {
             result = {
-                filter : options.filter[OPTION_CUSTOM_PROPERTY_PARENT]
+                filter : options.filter[OPTION_CUSTOM_PROPERTY_PARENT],
             };
         }
 
@@ -402,7 +409,7 @@ module.exports = class {
                 'Model:',
                 modelName + '.',
                 'Filter:',
-                JSON.stringify(options)
+                JSON.stringify(options),
             ].join(' '));
 
             // this._response.send404([

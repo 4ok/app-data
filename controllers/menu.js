@@ -78,12 +78,12 @@ module.exports = class extends Entity {
         const childProp = MENU_ITEM_CHILDREN_PROPERTY;
 
         return items.map(item => {
-            let result = {
+            const result = {
                 name : item.name,
                 type : controllerName,
                 path : (path)
                     ? path + '/' + item.alias
-                    : item.alias
+                    : item.alias,
             };
 
             if (item.route) {

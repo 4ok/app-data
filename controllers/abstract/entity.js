@@ -99,7 +99,7 @@ module.exports = class extends Index {
                 'app/lib/entities/items',
                 this._getEntityAlias(),
                 entityType,
-                action
+                action,
             ].join('/');
 
             return require(itemsPath);
@@ -112,8 +112,8 @@ module.exports = class extends Index {
                 result = this._findOne({
                     filter : {
                         // eslint-disable-next-line new-cap
-                        _id : mongojs.ObjectId(requestData._id) // @todo
-                    }
+                        _id : mongojs.ObjectId(requestData._id), // @todo
+                    },
                 })
                 .then(data => {
                     const entityType = (data.is_category)
@@ -130,7 +130,7 @@ module.exports = class extends Index {
             }
 
             result = result
-                .then((saveResult) => {
+                .then(saveResult => {
                     let res;
 
                     if (saveResult.error) {
@@ -144,15 +144,15 @@ module.exports = class extends Index {
                         const failData = {
                             alert : {
                                 type : 'error',
-                                message : saveResult.error
+                                message : saveResult.error,
                             },
-                            data : data
+                            data,
                         };
 
                         res = (action === ACTION_ADD)
                             ? failData
                             : this._findOne(options.model)
-                            .then((findResult) => {
+                            .then(findResult => {
                                 failData.data = _.merge(findResult, failData.data);
 
                                 return failData;
@@ -189,9 +189,9 @@ module.exports = class extends Index {
                         throw new BreakPromise([
                             'Redirect',
                             {
-                                url : url,
-                                action : 'Save article "' + saveData._id + '"' // @todo
-                            }
+                                url,
+                                action : 'Save article "' + saveData._id + '"', // @todo
+                            },
                         ]);
                     }
 
@@ -211,13 +211,13 @@ module.exports = class extends Index {
                 }
 
                 const res = {
-                    data : data
+                    data,
                 };
 
                 if (request.session('message')) {
                     res.alert = {
                         type : 'success',
-                        message : request.session('message')
+                        message : request.session('message'),
                     };
 
                     request.clearSession('message'); // @todo session
@@ -230,7 +230,7 @@ module.exports = class extends Index {
             if (options.model) {
                 result = this
                     ._findOne(options.model)
-                    .then((findResult) => getResult(options, findResult));
+                    .then(findResult => getResult(options, findResult));
             } else {
                 result = getResult(options);
             }
@@ -243,7 +243,7 @@ module.exports = class extends Index {
         const defaultMethod = HTTP_METHOD_POST;
         const allowMethods = [
             HTTP_METHOD_GET,
-            HTTP_METHOD_POST
+            HTTP_METHOD_POST,
         ];
 
         if (!options) {
@@ -274,7 +274,7 @@ module.exports = class extends Index {
     _validateAndSave(action, items, data) {
         return this
             ._validate(data, items)
-            .then((validateResult) => {
+            .then(validateResult => {
                 let result;
 
                 if (validateResult.error) {
@@ -286,7 +286,7 @@ module.exports = class extends Index {
                     if (action === ACTION_EDIT) {
 
                         // @todo for db factory
-                        _.forEach(items, (item) => {
+                        _.forEach(items, item => { // TODO
 
                             if (item.data) {
                                 const itemData = item.data;
@@ -305,11 +305,9 @@ module.exports = class extends Index {
 
                     result = this
                         ._save(saveData)
-                        .then(() => {
-                            return { // TODO
-                                data : filteredData
-                            };
-                        });
+                        .then(() => ({
+                            data : filteredData,
+                        }));
                 }
 
                 return result;
@@ -323,21 +321,21 @@ module.exports = class extends Index {
             presence : 'required',
             language : { // @todo
                 any : {
-                    empty : 'необходимо указать {{key}}'
+                    empty : 'необходимо указать {{key}}',
                 },
                 string : {
-                    max : 'должно содержать не более {{limit}} символов' // @todo склонения
+                    max : 'должно содержать не более {{limit}} символов', // @todo склонения
                 },
                 object : {
-                    base : 'должно быть правильным JSON объектом'
-                }
-            }
+                    base : 'должно быть правильным JSON объектом',
+                },
+            },
         };
         const deferred = q.defer();
 
         joi.validate(data, schema, options, (error, validateResult) => { // @todo joi to abstract
-            let result = {
-                data : validateResult
+            const result = {
+                data : validateResult,
             };
 
             if (error) {
@@ -351,9 +349,9 @@ module.exports = class extends Index {
     }
 
     _getValidateSchema(items) {
-        let schema = {};
+        const schema = {};
 
-        _.forEach(items, (item) => {
+        _.forEach(items, item => { // TODO
 
             if (item.data && item.data.input && item.data.input.validator) {
                 const data = item.data;
@@ -370,7 +368,7 @@ module.exports = class extends Index {
     _filter(data, items) {
         const request = this._request;
 
-        _.forEach(items, (item) => {
+        _.forEach(items, item => { // TODO
             const itemData = item.data;
             const filter = _.get(itemData, 'input.filter');
 
