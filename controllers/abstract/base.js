@@ -37,10 +37,7 @@ module.exports = class {
     }
 
     _getModel(name) {
-
-        if (!name) {
-            name = this._getModelName();
-        }
+        name = name || this._getModelName();
 
         const Model = require('../../models/' + name);
 
