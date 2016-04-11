@@ -10,8 +10,7 @@
     "lodash": "^4.6.1",
     "joi": "^8.0.4",
     "mongojs": "^2.3.0",
-    "break-promise": "git+https://github.com/4ok/break-promise.git",
-    "db": "git+https://github.com/4ok/db.git"
+    "break-promise": "git+https://github.com/4ok/break-promise.git"
   },
   "private": true,
   "scripts": {

@@ -1,8 +1,8 @@
 'use strict';
 
-const Db = require('db');
+const Model = require('../components/model/abstract');
 
-module.exports = class extends Db {
+module.exports = class extends Model {
 
     constructor() {
         super('counter');
