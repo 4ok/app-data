@@ -1,18 +1,18 @@
 'use strict';
 
 const mongojs = require('mongojs');
-const q       = require('q');
-const _       = require('lodash');
-const config  = require('config');
+const q = require('q');
+const _ = require('lodash');
+const config = require('config');
 
 const mongo = config.db.mongo;
-const db    = mongojs([ // TODO errors
+const db = mongojs([ // TODO errors
     'mongodb://',
     mongo.host,
     ':',
     mongo.port,
     '/',
-    mongo.db
+    mongo.db,
 ].join(''));
 
 module.exports = class {
@@ -24,43 +24,36 @@ module.exports = class {
     find(options) {
         const deferred = q.defer();
         const query = this
-            ._getDb()
-            .collection(this._getCollectionName())
+            ._collection
             .find(options.filter);
 
-        if (options.hasOwnProperty('sort')) {
+        if (options.sort) {
             query.sort(options.sort); // TODO: order to int (1, -1)
         }
 
-        if (options.hasOwnProperty('limit')) {
+        if (options.limit) {
             query.limit(options.limit);
         }
 
-        query.toArray(function(error, result) {
-
-            (error)
-                ? deferred.reject(new Error(error))
-                : deferred.resolve(result);
-        });
+        query.toArray(this._onResult.bind(this, deferred));
 
         return deferred.promise;
     }
 
     findOne(options) {
-        const deferred = q.defer();
+        return this._action('findOne', [options.filter], (deferred, error, data) => {
 
-        this
-            ._getDb()
-            .collection(this._getCollectionName())
-            .findOne(options.filter, function (error, data) {
+            if (error) {
+                deferred.reject(new Error(error));
+            } else {
                 let result = {};
 
-                if (options.hasOwnProperty('fields')) { // @todo to const and this property for list
-                    const fields = options['fields'];
+                if (options.fields) { // @todo to const and this property for list
+                    const fields = options.fields;
 
-                    _.forEach(fields, function (alias, name) {
+                    _.forEach(fields, (alias, name) => {
 
-                        if (true === alias) {
+                        if (alias === true) {
                             alias = name;
                         }
 
@@ -70,28 +63,14 @@ module.exports = class {
                     result = data;
                 }
 
-                (error)
-                    ? deferred.reject(new Error(error))
-                    : deferred.resolve(result);
-            });
+                deferred.resolve(result);
+            }
 
-        return deferred.promise;
+        });
     }
 
     aggregate(data) {
-        const deferred = q.defer();
-
-        this
-            ._getDb()
-            .collection(this._getCollectionName())
-            .aggregate(data, function (error, result) { // @todo extract to method
-
-                (error)
-                    ? deferred.reject(new Error(error))
-                    : deferred.resolve(result);
-            });
-
-        return deferred.promise;
+        return this._action('aggregate', [data]);
     }
 
     save(data) {
@@ -99,7 +78,7 @@ module.exports = class {
 
         if (data.hasOwnProperty('_id')) {
             const filter = {
-                _id: data._id
+                _id : data._id,
             };
 
             data = _.clone(data);
@@ -114,60 +93,45 @@ module.exports = class {
     }
 
     update(filter, data) {
-        const deferred = q.defer();
-
-        this
-            ._getDb()
-            .collection(this._getCollectionName()) // @todo refactor
-            .update(filter, {
-                $set: data
-            }, function (error, result) { // @todo extract to method
-
-                (error)
-                    ? deferred.reject(new Error(error))
-                    : deferred.resolve(result);
-            });
-
-        return deferred.promise;
+        return this._action('update', [filter, {
+            $set : data,
+        }]);
     }
 
     insert(data) {
-        const deferred = q.defer();
-
-        this
-            ._getDb()
-            .collection(this._getCollectionName())
-            .insert(data, function (error, result) { // @todo extract to method
-
-                (error)
-                    ? deferred.reject(new Error(error))
-                    : deferred.resolve(result);
-            });
-
-        return deferred.promise;
+        return this._action('insert', [data]);
     }
 
     remove(filter) {
+        return this._action('remove', [filter]);
+    }
+
+    _action(name, args, callback) {
         const deferred = q.defer();
 
-        this
-            ._getDb()
-            .collection(this._getCollectionName())
-            .remove(filter, function (error, result) { // @todo extract to method
+        args.push((error, result) => {
+            this._onResult(deferred, error, result);
 
-                (error)
-                    ? deferred.reject(new Error(error))
-                    : deferred.resolve(result);
-            });
+            if (callback) {
+                callback(deferred, error, result);
+            }
+        });
+
+        this._collection[name].apply(this._collection, args);
 
         return deferred.promise;
     }
 
-    _getDb() {
-        return db;
+    _onResult(deferred, error, result) {
+
+        if (error) {
+            deferred.reject(new Error(error));
+        } else {
+            deferred.resolve(result);
+        }
     }
 
-    _getCollectionName() {
-        return this._collectionName;
+    get _collection() {
+        return db.collection(this._collectionName);
     }
 };
