@@ -17,7 +17,7 @@
     "eslint-config-4ok": "git://github.com/4ok/eslint-config-4ok"
   },
   "scripts": {
-    "test": "node_modules/.bin/eslint ."
+    "lint": "node_modules/.bin/eslint ."
   },
   "private": true
 }
