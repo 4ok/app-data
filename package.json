@@ -7,13 +7,13 @@
   },
   "dependencies": {
     "q": "^1.4.1",
-    "lodash": "^4.6.1",
-    "joi": "^8.0.4",
+    "lodash": "^4.11.1",
+    "joi": "^8.0.5",
     "mongojs": "^2.3.0",
     "break-promise": "git+https://github.com/4ok/break-promise.git"
   },
   "devDependencies": {
-    "eslint": "^2.7.0",
+    "eslint": "^2.8.0",
     "eslint-config-4ok": "git://github.com/4ok/eslint-config-4ok"
   },
   "scripts": {
