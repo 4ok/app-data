@@ -1,6 +1,5 @@
 'use strict';
 
-const q = require('q');
 const Entity = require('./abstract/entity');
 
 const MENU_ITEM_CHILDREN_PROPERTY = 'children';
@@ -43,7 +42,7 @@ module.exports = class extends Entity {
                         return result;
                     }, []);
 
-                return q.all(promises);
+                return Promise.all(promises);
             })
             .then(children => {
                 const childrenHash = children.reduce((result, items, index) => {

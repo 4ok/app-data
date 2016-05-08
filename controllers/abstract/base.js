@@ -1,7 +1,6 @@
 'use strict';
 
-const q = require('q');
-const _ = require('lodash');
+const groupBy = require('lodash.groupby');
 
 const OPTION_CUSTOM_PROPERTY_PARENT = '#parent';
 const OPTION_CUSTOM_PROPERTY_CHAIN = '#chain';
@@ -93,7 +92,7 @@ module.exports = class {
                 let result;
 
                 if (items.length) {
-                    result = q.all(items.map(item => {
+                    result = Promise.all(items.map(item => {
                         const childrenOptions = options;
 
                         childrenOptions.filter.parent_id = item._id;
@@ -103,11 +102,9 @@ module.exports = class {
                             .then(children => {
 
                                 if (children.length) {
-                                    children = _.groupBy(children, 'parent_id');
-
+                                    children = groupBy(children, 'parent_id');
                                     item.children = children[item._id]; // @todo
                                 }
-
 
                                 return item;
                             });
@@ -170,27 +167,29 @@ module.exports = class {
     }
 
     _processOptionsCustomPropertiesAndFind(modelName, method, options) {
+        const filter = options.filter || {};
         let hasChain = false;
         let result;
 
-        _.forEach(options.filter, (filterItem, property) => {
+        Object
+            .keys(filter)
+            .forEach(key => {
+                const value = filter[key];
 
-            if (_.isPlainObject(filterItem)
-                && filterItem.hasOwnProperty(OPTION_CUSTOM_PROPERTY_CHAIN)
-            ) {
-                delete options.filter[property];
+                if (value && value[OPTION_CUSTOM_PROPERTY_CHAIN]) {
+                    delete filter[key];
 
-                result = this._getChain(
-                    property,
-                    filterItem[OPTION_CUSTOM_PROPERTY_CHAIN],
-                    modelName,
-                    method,
-                    options,
-                    true
-                );
-                hasChain = true;
-            }
-        });
+                    result = this._getChain(
+                        key,
+                        value[OPTION_CUSTOM_PROPERTY_CHAIN],
+                        modelName,
+                        method,
+                        options,
+                        true
+                    );
+                    hasChain = true;
+                }
+            });
 
         if (!hasChain) {
             result = this._getModelResult(method, options, modelName);
@@ -201,7 +200,7 @@ module.exports = class {
 
     _getChain(field, chain, modelName, method, options, isReturnOnlyLast) {
         chain = (Array.isArray(chain))
-            ? _.clone(chain)
+            ? Object.assign({}, chain)
             : chain.split(CHAIN_SEPARATOR);
 
         const parentFieldId = COLLECTION_FIELD_PARENT_ID_CATEGORY;
@@ -257,9 +256,9 @@ module.exports = class {
                             ]);
                         }
 
-                        childOptions = _.clone(options);
+                        childOptions = Object.assign({}, options);
 
-                        if (!_.isPlainObject(childOptions.filter)) {
+                        if (!childOptions.filter) {
                             childOptions.filter = {};
                         }
                     } else {
@@ -325,18 +324,21 @@ module.exports = class {
     _getItemsWithNumChildren(items, numChildren) {
         const numChildrenKeyParentId = {};
 
-        _.forEach(numChildren, value => { // TODO
-            const group = value._id;
-            const key = (group.is_category)
-                ? 'categories'
-                : 'elements';
+        Object
+            .keys(numChildren)
+            .forEach(key => {
+                const value = numChildren[key];
+                const group = value._id;
+                const entity = (group.is_category)
+                    ? 'categories'
+                    : 'elements';
 
-            if (!numChildrenKeyParentId.hasOwnProperty(group.parent_id)) {
-                numChildrenKeyParentId[group.parent_id] = {};
-            }
+                if (!numChildrenKeyParentId.hasOwnProperty(group.parent_id)) {
+                    numChildrenKeyParentId[group.parent_id] = {};
+                }
 
-            numChildrenKeyParentId[group.parent_id][key] = value.num;
-        });
+                numChildrenKeyParentId[group.parent_id][entity] = value.num;
+            });
 
         return items.map(item => {
 
@@ -351,10 +353,14 @@ module.exports = class {
             if (numChildrenKeyParentId.hasOwnProperty(item._id)) {
                 const itemNumChildren = numChildrenKeyParentId[item._id];
 
-                _.forEach(itemNumChildren, (num, key) => {
-                    item.num[key] = num;
-                    item.num.children += num;
-                });
+                Object
+                    .keys(itemNumChildren)
+                    .forEach(key => {
+                        const num = itemNumChildren[key];
+
+                        item.num[key] = num;
+                        item.num.children += num;
+                    });
             }
 
             return item;
@@ -376,7 +382,7 @@ module.exports = class {
     }
 
     _getCurrentOptions(options, parent) {
-        const currentOptions = _.clone(options);
+        const currentOptions = Object.assign({}, options);
 
         delete currentOptions.filter[OPTION_CUSTOM_PROPERTY_PARENT];
 

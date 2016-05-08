@@ -1,7 +1,7 @@
 'use strict';
 
-const q = require('q');
-const _ = require('lodash');
+const get = require('lodash.get');
+const set = require('lodash.set');
 const BreakPromise = require('break-promise');
 
 const joi = require('joi'); // @todo
@@ -105,25 +105,26 @@ module.exports = class extends Index {
             return require(itemsPath);
         };
 
-        if (!_.isEmpty(requestData)) { // @todo many rows in method
+        if (Object.keys(requestData).length > 0) { // @todo many rows in method
             let items;
 
             if (action === ACTION_EDIT) {
-                result = this._findOne({
-                    filter : {
-                        // eslint-disable-next-line new-cap
-                        _id : mongojs.ObjectId(requestData._id), // @todo
-                    },
-                })
-                .then(data => {
-                    const entityType = (data.is_category)
-                        ? ENTITY_TYPE_CATEGORY
-                        : ENTITY_TYPE_ELEMENT;
+                result = this
+                    ._findOne({
+                        filter : {
+                            // eslint-disable-next-line new-cap
+                            _id : mongojs.ObjectId(requestData._id), // @todo
+                        },
+                    })
+                    .then(data => {
+                        const entityType = (data.is_category)
+                            ? ENTITY_TYPE_CATEGORY
+                            : ENTITY_TYPE_ELEMENT;
 
-                    items = getItems(entityType);
+                        items = getItems(entityType);
 
-                    return this._validateAndSave(action, items, requestData);
-                });
+                        return this._validateAndSave(action, items, requestData);
+                    });
             } else {
                 items = getItems(options.entity_type);
                 result = this._validateAndSave(action, items, requestData);
@@ -134,12 +135,7 @@ module.exports = class extends Index {
                     let res;
 
                     if (saveResult.error) {
-                        let data = requestData;
-
-                        // @todo to const and duplicate code
-                        if (options.hasOwnProperty('#assign')) {
-                            data = _.assign(options['#assign'], data);
-                        }
+                        const data = Object.assign(requestData || {}, options['#assign'] || {});
 
                         const failData = {
                             alert : {
@@ -153,7 +149,7 @@ module.exports = class extends Index {
                             ? failData
                             : this._findOne(options.model)
                             .then(findResult => {
-                                failData.data = _.merge(findResult, failData.data);
+                                failData.data = Object.assign({}, findResult, failData.data);
 
                                 return failData;
                             });
@@ -201,14 +197,7 @@ module.exports = class extends Index {
         } else {
 
             const getResult = (params, data) => {
-
-                if (!data) {
-                    data = {};
-                }
-
-                if (params.hasOwnProperty('#assign')) { // @todo to const
-                    data = _.assign(data, params['#assign']);
-                }
+                data = Object.assign(data || {}, params['#assign'] || {});
 
                 const res = {
                     data,
@@ -286,17 +275,20 @@ module.exports = class extends Index {
                     if (action === ACTION_EDIT) {
 
                         // @todo for db factory
-                        _.forEach(items, item => { // TODO
+                        Object
+                            .keys(items)
+                            .forEach(key => {
+                                const item = items[key];
 
-                            if (item.data) {
-                                const itemData = item.data;
-                                const value = _.get(filteredData, itemData.path);
+                                if (item.data) {
+                                    const itemData = item.data;
+                                    const value = get(filteredData, itemData.path);
 
-                                if (undefined !== value) {
-                                    saveData[itemData.path] = value;
+                                    if (value !== undefined) {
+                                        saveData[itemData.path] = value;
+                                    }
                                 }
-                            }
-                        });
+                            });
                     } else {
                         saveData = filteredData;
                     }
@@ -331,58 +323,64 @@ module.exports = class extends Index {
                 },
             },
         };
-        const deferred = q.defer();
 
-        joi.validate(data, schema, options, (error, validateResult) => { // @todo joi to abstract
-            const result = {
-                data : validateResult,
-            };
+        return new Promise(resolve => {
 
-            if (error) {
-                result.error = error;
-            }
+            // @todo joi to abstract
+            joi.validate(data, schema, options, (error, validateResult) => {
+                const result = {
+                    data : validateResult,
+                };
 
-            deferred.resolve(result);
+                if (error) {
+                    result.error = error;
+                }
+
+                resolve(result);
+            });
         });
-
-        return deferred.promise;
     }
 
     _getValidateSchema(items) {
-        const schema = {};
+        const result = {};
 
-        _.forEach(items, item => { // TODO
+        Object
+            .keys(items)
+            .forEach(key => {
+                const item = items[key];
 
-            if (item.data && item.data.input && item.data.input.validator) {
-                const data = item.data;
+                if (item.data && item.data.input && item.data.input.validator) {
+                    const data = item.data;
 
-                _.set(schema, data.path, data.input.validator);
-            }
-        });
+                    set(result, data.path, data.input.validator);
+                }
+            });
 
-        schema.submit = joi.any(); // @todo
+        result.submit = joi.any(); // @todo
 
-        return schema;
+        return result;
     }
 
     _filter(data, items) {
-        const request = this._request;
+        Object
+            .keys(items)
+            .forEach(key => {
+                const item = items[key];
 
-        _.forEach(items, item => { // TODO
-            const itemData = item.data;
-            const filter = _.get(itemData, 'input.filter');
+                const itemData = item.data;
+                const filter = get(itemData, 'input.filter');
 
-            if (undefined !== filter) {
-                const itemValue = _.get(data, itemData.path);
-                const filterResult = (_.isFunction(filter))
-                    ? filter(itemValue, request)
-                    : filter;
+                if (filter !== undefined) {
+                    const itemValue = get(data, itemData.path);
+                    const filterResult = (typeof filter === 'function')
+                        ? filter(itemValue, this._request)
+                        : filter;
 
-                if (undefined !== filterResult) {
-                    _.set(data, itemData.path, filterResult);
+                    if (undefined !== filterResult) {
+                        set(data, itemData.path, filterResult);
+                    }
                 }
-            }
-        });
+            });
 
         return data;
     }

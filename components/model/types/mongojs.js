@@ -1,8 +1,6 @@
 'use strict';
 
 const mongojs = require('mongojs');
-const q = require('q');
-const _ = require('lodash');
 const config = require('config');
 
 const mongo = config.db.mongo;
@@ -22,10 +20,7 @@ module.exports = class {
     }
 
     find(options) {
-        const deferred = q.defer();
-        const query = this
-            ._collection
-            .find(options.filter);
+        const query = this._collection.find(options.filter);
 
         if (options.sort) {
             query.sort(options.sort); // TODO: order to int (1, -1)
@@ -35,42 +30,41 @@ module.exports = class {
             query.limit(options.limit);
         }
 
-        query.toArray(this._onResult.bind(this, deferred));
-
-        return deferred.promise;
+        return new Promise((resolve, reject) => {
+            query.toArray(this._onPromiseResult.bind(this, resolve, reject));
+        });
     }
 
     findOne(options) {
-        return this._action('findOne', [options.filter], (deferred, error, data) => {
-
-            if (error) {
-                deferred.reject(new Error(error));
-            } else {
+        return this
+            ._doAction('findOne', [options.filter]) // @todo: sort, etc
+            .then(data => {
                 let result = {};
+                const fields = options.fields;
 
-                if (options.fields) { // @todo to const and this property for list
-                    const fields = options.fields;
+                if (fields) { // @todo to const and this property for list
 
-                    _.forEach(fields, (alias, name) => {
+                    Object
+                        .keys(fields)
+                        .forEach(name => {
+                            let alias = fields[name];
 
-                        if (alias === true) {
-                            alias = name;
-                        }
+                            if (alias === true) {
+                                alias = name;
+                            }
 
-                        result[alias] = data[name];
-                    });
+                            result[alias] = data[name];
+                        });
                 } else {
                     result = data;
                 }
 
-                deferred.resolve(result);
-            }
-
-        });
+                return result;
+            });
     }
 
     aggregate(data) {
-        return this._action('aggregate', [data]);
+        return this._doAction('aggregate', [data]);
     }
 
     save(data) {
@@ -81,7 +75,7 @@ module.exports = class {
                 _id : data._id,
             };
 
-            data = _.clone(data);
+            data = Object.assign({}, data);
             delete data._id;
 
             result = this.update(filter, data);
@@ -93,41 +87,32 @@ module.exports = class {
     }
 
     update(filter, data) {
-        return this._action('update', [filter, {
+        return this._doAction('update', [filter, {
             $set : data,
         }]);
     }
 
     insert(data) {
-        return this._action('insert', [data]);
+        return this._doAction('insert', [data]);
     }
 
     remove(filter) {
-        return this._action('remove', [filter]);
+        return this._doAction('remove', [filter]);
     }
 
-    _action(name, args, callback) {
-        const deferred = q.defer();
-
-        args.push((error, result) => {
-            this._onResult(deferred, error, result);
-
-            if (callback) {
-                callback(deferred, error, result);
-            }
+    _doAction(name, args) {
+        return new Promise((resolve, reject) => {
+            args.push(this._onPromiseResult.bind(this, resolve, reject));
+            this._collection[name].apply(this._collection, args);
         });
-
-        this._collection[name].apply(this._collection, args);
-
-        return deferred.promise;
     }
 
-    _onResult(deferred, error, result) {
+    _onPromiseResult(resolve, reject, error, result) {
 
         if (error) {
-            deferred.reject(new Error(error));
+            reject(new Error(error));
         } else {
-            deferred.resolve(result);
+            resolve(result);
         }
     }
 
