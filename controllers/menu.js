@@ -1,5 +1,3 @@
-'use strict';
-
 const Entity = require('./abstract/entity');
 
 const MENU_ITEM_CHILDREN_PROPERTY = 'children';
@@ -32,6 +30,7 @@ module.exports = class extends Entity {
                             controllerName = method[0];
                             const actionName = (method[1] || 'index') + 'Action';
                             const controllersPath = './' + controllerName;
+                            // eslint-disable-next-line global-require
                             const Controller = require(controllersPath);
                             const controller = new Controller(this._http);
 

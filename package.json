@@ -15,7 +15,8 @@
   },
   "devDependencies": {
     "eslint": "^3.0.1",
-    "eslint-config-4ok": "git://github.com/4ok/eslint-config-4ok"
+    "eslint-config-4ok": "git://github.com/4ok/eslint-config-4ok",
+    "eslint-plugin-import": "^1.10.2"
   },
   "scripts": {
     "lint": "node_modules/.bin/eslint ."

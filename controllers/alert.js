@@ -1,5 +1,3 @@
-'use strict';
-
 const Index = require('./abstract/base');
 
 module.exports = class extends Index {

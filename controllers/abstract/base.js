@@ -1,4 +1,4 @@
-'use strict';
+/* eslint-disable no-underscore-dangle */
 
 const groupBy = require('lodash.groupby');
 
@@ -38,6 +38,7 @@ module.exports = class {
     _getModel(name) {
         name = name || this._getModelName();
 
+        // eslint-disable-next-line global-require
         const Model = require('../../models/' + name);
 
         return new Model(); // TODO: cache

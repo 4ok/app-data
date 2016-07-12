@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = class {
 
     callMethod(params, args) {
@@ -12,6 +10,7 @@ module.exports = class {
 
     _callController(controllerName, actionName, args) {
         const controllersPath = './controllers/' + controllerName;
+        // eslint-disable-next-line global-require
         const Controller = require(controllersPath);
         const controller = new Controller();
 

@@ -1,6 +1,5 @@
-'use strict';
-
 const mongojs = require('mongojs');
+// eslint-disable-next-line import/no-unresolved
 const config = require('config');
 
 const mongo = config.db.mongo;
@@ -72,10 +71,12 @@ module.exports = class {
 
         if (data.hasOwnProperty('_id')) {
             const filter = {
+                // eslint-disable-next-line no-underscore-dangle
                 _id : data._id,
             };
 
             data = Object.assign({}, data);
+            // eslint-disable-next-line no-underscore-dangle
             delete data._id;
 
             result = this.update(filter, data);

@@ -1,5 +1,4 @@
-'use strict';
-
+/* eslint-disable no-underscore-dangle */
 const get = require('lodash.get');
 const set = require('lodash.set');
 const BreakPromise = require('break-promise');
@@ -102,6 +101,7 @@ module.exports = class extends Index {
                 action,
             ].join('/');
 
+            // eslint-disable-next-line global-require
             return require(itemsPath);
         };
 
