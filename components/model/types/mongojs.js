@@ -35,31 +35,18 @@ module.exports = class {
     }
 
     findOne(options) {
-        return this
-            ._doAction('findOne', [options.filter]) // @todo: sort, etc
-            .then(data => {
-                let result = {};
-                const fields = options.fields;
+        const query = this._collection.find(options.filter);
 
-                if (fields) { // @todo to const and this property for list
+        if (options.sort) {
+            query.sort(options.sort);
+        }
 
-                    Object
-                        .keys(fields)
-                        .forEach(name => {
-                            let alias = fields[name];
+        query.limit(1);
 
-                            if (alias === true) {
-                                alias = name;
-                            }
-
-                            result[alias] = data[name];
-                        });
-                } else {
-                    result = data;
-                }
-
-                return result;
-            });
+        return new Promise((resolve, reject) => {
+            query.toArray(this._onPromiseResult.bind(this, resolve, reject));
+        })
+        .then(result => result[0]);
     }
 
     aggregate(data) {
