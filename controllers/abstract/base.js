@@ -96,9 +96,9 @@ module.exports = class {
                     result = Promise.all(items.map(item => {
                         const childrenOptions = options;
 
-                        childrenOptions.filter = {
-                            parent_id : item._id
-                        };
+                        // todo: IMPORTANT!
+                        delete childrenOptions.filter.alias;
+                        childrenOptions.filter.parent_id = item._id;
 
                         return this
                             ._findTree(childrenOptions)
