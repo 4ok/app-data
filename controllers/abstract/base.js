@@ -404,7 +404,7 @@ module.exports = class {
 
     _sendResponse404IfItemIsNull(item, error, options, modelName) {
 
-        if (item === null) {
+        if (!item) {
 
             if (!modelName) {
                 modelName = this._getModelName();
