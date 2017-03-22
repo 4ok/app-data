@@ -144,6 +144,8 @@ module.exports = class {
     }
 
     _getCurrent(method, options) {
+        const extraFields = options.extraFields || [];
+
         return this
             ._processOptionsCustomPropertiesAndFind(
                 this._getModelName(),
@@ -153,7 +155,7 @@ module.exports = class {
             .then(item => {
                 let result = item;
 
-                if (Array.isArray(item)) {
+                if (extraFields.includes('num')) {
                     result = this._getNumberChildren(item);
                 }
 
@@ -292,8 +294,10 @@ module.exports = class {
         });
     }
 
-    // @todo optional
     _getNumberChildren(items) {
+        const isOne = !Array.isArray(items);
+        items = [].concat(items);
+
         const categoriesId = items.map(item => item._id);
         const aggregate = () => {
             const fieldName = 'parent_id';
@@ -321,7 +325,13 @@ module.exports = class {
             ]);
         };
 
-        return aggregate().then(result => this._getItemsWithNumChildren(items, result));
+        return aggregate()
+            .then(result => {
+                return this._getItemsWithNumChildren(items, result);
+            })
+            .then(result => {
+                return isOne ? result[0] : result;
+            });
     }
 
     _getItemsWithNumChildren(items, numChildren) {
