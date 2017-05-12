@@ -1,19 +1,27 @@
+const CONTROLLERS_PATH = './controllers/';
+
 module.exports = class {
 
-    callMethod(params, args) {
-        params = params.split('/');
-        const controller = params[0];
-        const action = params[1] || 'index';
+    callMethod(resourceParams, actionParams) {
+        this._controllers = {};
 
-        return this._callController(controller, action, args);
+        const controllerName = resourceParams.controller || 'index';
+        const actionName = resourceParams.action || 'index';
+        const controller = this._getController(controllerName);
+
+        return controller[actionName + 'Action'](actionParams);
     }
 
-    _callController(controllerName, actionName, args) {
-        const controllersPath = './controllers/' + controllerName;
-        // eslint-disable-next-line global-require
-        const Controller = require(controllersPath);
-        const controller = new Controller();
+    _getController(name) {
 
-        return controller[actionName + 'Action'](args);
+        if (!this._controllers[name]) {
+            const controllerPath = CONTROLLERS_PATH + '/' + name;
+            // eslint-disable-next-line global-require
+            const Controller = require(controllerPath);
+
+            this._controllers[name] = new Controller();
+        }
+
+        return this._controllers[name];
     }
 };
