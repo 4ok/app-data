@@ -1,6 +1,6 @@
 {
   "author": "4ok",
-  "name": "app-data",
+  "name": "app-resource-default",
   "version": "0.0.0",
   "engines": {
     "node": ">=4.0.0"
