@@ -5,8 +5,9 @@ module.exports = class {
     callMethod(resourceParams, actionParams) {
         this._controllers = {};
 
-        const controllerName = resourceParams.controller || 'index';
-        const actionName = resourceParams.action || 'index';
+        const pathParams = resourceParams.path.split('/');
+        const controllerName = pathParams[0] || 'index';
+        const actionName = pathParams[1] || 'index';
         const controller = this._getController(controllerName);
 
         return controller[actionName + 'Action'](actionParams);
