@@ -94,10 +94,11 @@ module.exports = class {
 
                 if (items.length) {
                     result = Promise.all(items.map(item => {
-                        const childrenOptions = options;
 
                         // todo: IMPORTANT!
-                        delete childrenOptions.filter.alias;
+                        const childrenOptions = options;
+                        childrenOptions.filter = Object.assign({}, childrenOptions.filter);
+                        delete childrenOptions.filter.alias;  // todo: why alias?
                         childrenOptions.filter.parent_id = item._id;
 
                         return this
