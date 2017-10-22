@@ -101,7 +101,7 @@ module.exports = class extends Index {
                 action,
             ].join('/');
 
-            // eslint-disable-next-line global-require
+            // eslint-disable-next-line global-require, import/no-dynamic-require
             return require(itemsPath);
         };
 
@@ -111,12 +111,12 @@ module.exports = class extends Index {
             if (action === ACTION_EDIT) {
                 result = this
                     ._findOne({
-                        filter : {
+                        filter: {
                             // eslint-disable-next-line new-cap
-                            _id : mongojs.ObjectId(requestData._id), // @todo
+                            _id: mongojs.ObjectId(requestData._id), // @todo
                         },
                     })
-                    .then(data => {
+                    .then((data) => {
                         const entityType = (data.is_category)
                             ? ENTITY_TYPE_CATEGORY
                             : ENTITY_TYPE_ELEMENT;
@@ -131,16 +131,16 @@ module.exports = class extends Index {
             }
 
             result = result
-                .then(saveResult => {
+                .then((saveResult) => {
                     let res;
 
                     if (saveResult.error) {
                         const data = Object.assign(requestData || {}, options['#assign'] || {});
 
                         const failData = {
-                            alert : {
-                                type : 'error',
-                                message : saveResult.error,
+                            alert: {
+                                type: 'error',
+                                message: saveResult.error,
                             },
                             data,
                         };
@@ -148,16 +148,14 @@ module.exports = class extends Index {
                         res = (action === ACTION_ADD)
                             ? failData
                             : this._findOne(options.model)
-                            .then(findResult => {
-                                failData.data = Object.assign({}, findResult, failData.data);
+                                .then((findResult) => {
+                                    failData.data = Object.assign({}, findResult, failData.data);
 
-                                return failData;
-                            });
+                                    return failData;
+                                });
                     } else {
                         const params = request.get('params'); // @todo
-                        let url = ['/cms/content'].concat(
-                            this._getEntityAlias()
-                        );
+                        let url = ['/cms/content'].concat(this._getEntityAlias());
 
                         if (params.parent_alias) {
                             url = url.concat(params.parent_alias);
@@ -186,7 +184,7 @@ module.exports = class extends Index {
                             'Redirect',
                             {
                                 url,
-                                action : 'Save article "' + saveData._id + '"', // @todo
+                                action: 'Save article "' + saveData._id + '"', // @todo
                             },
                         ]);
                     }
@@ -205,8 +203,8 @@ module.exports = class extends Index {
 
                 if (request.session('message')) {
                     res.alert = {
-                        type : 'success',
-                        message : request.session('message'),
+                        type: 'success',
+                        message: request.session('message'),
                     };
 
                     request.clearSession('message'); // @todo session
@@ -246,12 +244,12 @@ module.exports = class extends Index {
         let requestKey;
 
         switch (method) {
-            case HTTP_METHOD_POST : {
+            case HTTP_METHOD_POST: {
                 requestKey = 'body';
                 break;
             }
-            case HTTP_METHOD_GET :
-            default : {
+            case HTTP_METHOD_GET:
+            default: {
                 requestKey = 'query';
                 break;
             }
@@ -263,7 +261,7 @@ module.exports = class extends Index {
     _validateAndSave(action, items, data) {
         return this
             ._validate(data, items)
-            .then(validateResult => {
+            .then((validateResult) => {
                 let result;
 
                 if (validateResult.error) {
@@ -277,7 +275,7 @@ module.exports = class extends Index {
                         // @todo for db factory
                         Object
                             .keys(items)
-                            .forEach(key => {
+                            .forEach((key) => {
                                 const item = items[key];
 
                                 if (item.data) {
@@ -298,7 +296,7 @@ module.exports = class extends Index {
                     result = this
                         ._save(saveData)
                         .then(() => ({
-                            data : filteredData,
+                            data: filteredData,
                         }));
                 }
 
@@ -307,29 +305,29 @@ module.exports = class extends Index {
     }
 
     _validate(data, items) {
-        const schema = this._getValidateSchema(items);
+        const schema = this.constructor._getValidateSchema(items);
         const options = {
-            abortEarly : false,
-            presence : 'required',
-            language : { // @todo
-                any : {
-                    empty : 'необходимо указать {{key}}',
+            abortEarly: false,
+            presence: 'required',
+            language: { // @todo
+                any: {
+                    empty: 'необходимо указать {{key}}',
                 },
-                string : {
-                    max : 'должно содержать не более {{limit}} символов', // @todo склонения
+                string: {
+                    max: 'должно содержать не более {{limit}} символов', // @todo склонения
                 },
-                object : {
-                    base : 'должно быть правильным JSON объектом',
+                object: {
+                    base: 'должно быть правильным JSON объектом',
                 },
             },
         };
 
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
 
             // @todo joi to abstract
             joi.validate(data, schema, options, (error, validateResult) => {
                 const result = {
-                    data : validateResult,
+                    data: validateResult,
                 };
 
                 if (error) {
@@ -341,16 +339,16 @@ module.exports = class extends Index {
         });
     }
 
-    _getValidateSchema(items) {
+    static _getValidateSchema(items) {
         const result = {};
 
         Object
             .keys(items)
-            .forEach(key => {
+            .forEach((key) => {
                 const item = items[key];
 
                 if (item.data && item.data.input && item.data.input.validator) {
-                    const data = item.data;
+                    const { data } = item;
 
                     set(result, data.path, data.input.validator);
                 }
@@ -364,7 +362,7 @@ module.exports = class extends Index {
     _filter(data, items) {
         Object
             .keys(items)
-            .forEach(key => {
+            .forEach((key) => {
                 const item = items[key];
 
                 const itemData = item.data;

@@ -8,8 +8,8 @@ module.exports = class extends Index {
 
         if (request.session('message')) {
             result = {
-                type : 'success', // @todo
-                message : request.session('message'),
+                type: 'success', // @todo
+                message: request.session('message'),
             };
 
             request.clearSession('message');

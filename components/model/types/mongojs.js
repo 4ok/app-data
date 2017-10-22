@@ -2,7 +2,7 @@ const mongojs = require('mongojs');
 // eslint-disable-next-line import/no-unresolved
 const config = require('config');
 
-const mongo = config.db.mongo;
+const { mongo } = config.db;
 const db = mongojs([ // TODO errors
     'mongodb://',
     mongo.host,
@@ -46,7 +46,7 @@ module.exports = class {
         return new Promise((resolve, reject) => {
             query.toArray(this._onPromiseResult.bind(this, resolve, reject));
         })
-        .then(result => result[0]);
+            .then(result => result[0]);
     }
 
     aggregate(data) {
@@ -56,10 +56,11 @@ module.exports = class {
     save(data) {
         let result;
 
-        if (data.hasOwnProperty('_id')) {
+        // eslint-disable-next-line no-underscore-dangle
+        if (data._id !== undefined) {
             const filter = {
                 // eslint-disable-next-line no-underscore-dangle
-                _id : data._id,
+                _id: data._id,
             };
 
             data = Object.assign({}, data);
@@ -76,7 +77,7 @@ module.exports = class {
 
     update(filter, data) {
         return this._doAction('update', [filter, {
-            $set : data,
+            $set: data,
         }]);
     }
 
@@ -90,11 +91,12 @@ module.exports = class {
 
     _doAction(name, args) {
         return new Promise((resolve, reject) => {
-            args.push(this._onPromiseResult.bind(this, resolve, reject));
-            this._collection[name].apply(this._collection, args);
+            args.push(this._onPromiseResult.constructor.bind(this, resolve, reject));
+            this._collection[name](...args);
         });
     }
 
+    // eslint-disable-next-line class-methods-use-this
     _onPromiseResult(resolve, reject, error, result) {
 
         if (error) {

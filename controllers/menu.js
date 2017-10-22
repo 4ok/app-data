@@ -16,7 +16,7 @@ module.exports = class extends Entity {
 
         return this
             ._findOne(options)
-            .then(root => {
+            .then((root) => {
                 menu = root;
 
                 const promises = root.items
@@ -27,10 +27,10 @@ module.exports = class extends Entity {
                             const childParams = item[childProp];
                             const method = childParams.method.split('/');
 
-                            controllerName = method[0];
+                            [controllerName] = method;
                             const actionName = (method[1] || 'index') + 'Action';
                             const controllersPath = './' + controllerName;
-                            // eslint-disable-next-line global-require
+                            // eslint-disable-next-line global-require, import/no-dynamic-require
                             const Controller = require(controllersPath);
                             const controller = new Controller(this._http);
 
@@ -43,16 +43,16 @@ module.exports = class extends Entity {
 
                 return Promise.all(promises);
             })
-            .then(children => {
+            .then((children) => {
                 const childrenHash = children.reduce((result, items, index) => {
                     result[equals[index]] = items;
 
                     return result;
                 }, {});
 
-                const items = menu.items;
+                const { items } = menu;
 
-                items.map(item => {
+                items.map((item) => {
 
                     if (item[childProp]) {
 
@@ -75,11 +75,11 @@ module.exports = class extends Entity {
     _getMenuItems(items, controllerName, path) {
         const childProp = MENU_ITEM_CHILDREN_PROPERTY;
 
-        return items.map(item => {
+        return items.map((item) => {
             const result = {
-                name : item.name,
-                type : controllerName,
-                path : (path)
+                name: item.name,
+                type: controllerName,
+                path: (path)
                     ? path + '/' + item.alias
                     : item.alias,
             };

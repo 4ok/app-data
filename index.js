@@ -17,7 +17,7 @@ module.exports = class {
 
         if (!this._controllers[name]) {
             const controllerPath = CONTROLLERS_PATH + '/' + name;
-            // eslint-disable-next-line global-require
+            // eslint-disable-next-line global-require, import/no-dynamic-require
             const Controller = require(controllerPath);
 
             this._controllers[name] = new Controller();
