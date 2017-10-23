@@ -45,7 +45,7 @@ module.exports = class {
     }
 
     _find(options, isOne) {
-        const parentOptions = this.constructor._getParentOptions(options);
+        const parentOptions = this._getParentOptions(options);
         const method = (isOne)
             ? MODEL_METHOD_FIND_ONE
             : MODEL_METHOD_FIND;
@@ -379,7 +379,7 @@ module.exports = class {
         });
     }
 
-    static _getParentOptions(options) {
+    _getParentOptions(options) {
         let result;
 
         if (options.filter !== undefined
