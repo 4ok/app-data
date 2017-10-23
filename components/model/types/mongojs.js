@@ -30,6 +30,7 @@ module.exports = class {
         }
 
         return new Promise((resolve, reject) => {
+            // eslint-disable-next-line no-underscore-dangle
             query.toArray(this.constructor._onPromiseResult.bind(this, resolve, reject));
         });
     }
@@ -44,9 +45,9 @@ module.exports = class {
         query.limit(1);
 
         return new Promise((resolve, reject) => {
+            // eslint-disable-next-line no-underscore-dangle
             query.toArray(this.constructor._onPromiseResult.bind(this, resolve, reject));
-        })
-            .then(result => result[0]);
+        }).then(result => result[0]);
     }
 
     aggregate(data) {
