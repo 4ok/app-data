@@ -30,7 +30,7 @@ module.exports = class {
         }
 
         return new Promise((resolve, reject) => {
-            query.toArray(this._onPromiseResult.bind(this, resolve, reject));
+            query.toArray(this.constructor._onPromiseResult.bind(this, resolve, reject));
         });
     }
 
@@ -44,7 +44,7 @@ module.exports = class {
         query.limit(1);
 
         return new Promise((resolve, reject) => {
-            query.toArray(this._onPromiseResult.bind(this, resolve, reject));
+            query.toArray(this.constructor._onPromiseResult.bind(this, resolve, reject));
         })
             .then(result => result[0]);
     }
