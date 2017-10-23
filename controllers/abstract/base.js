@@ -363,7 +363,7 @@ module.exports = class {
                 };
             }
 
-            if (numChildrenKeyParentId[item._id !== undefined]) {
+            if (numChildrenKeyParentId[item._id] !== undefined) {
                 const itemNumChildren = numChildrenKeyParentId[item._id];
 
                 Object
