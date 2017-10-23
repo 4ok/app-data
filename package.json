@@ -11,7 +11,7 @@
     "lodash.get": "^4.3.0",
     "lodash.groupby": "^4.4.0",
     "lodash.set": "^4.2.0",
-    "mongojs": "^2.4.0"
+    "mongojs": "2.4.0"
   },
   "devDependencies": {
     "eslint": "^4.3.0",
