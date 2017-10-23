@@ -91,13 +91,13 @@ module.exports = class {
 
     _doAction(name, args) {
         return new Promise((resolve, reject) => {
-            args.push(this._onPromiseResult.constructor.bind(this, resolve, reject));
+            // eslint-disable-next-line no-underscore-dangle
+            args.push(this.constructor._onPromiseResult.bind(this, resolve, reject));
             this._collection[name](...args);
         });
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    _onPromiseResult(resolve, reject, error, result) {
+    static _onPromiseResult(resolve, reject, error, result) {
 
         if (error) {
             reject(new Error(error));

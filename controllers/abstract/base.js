@@ -41,11 +41,12 @@ module.exports = class {
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const Model = require('../../models/' + name);
 
-        return new Model(); // TODO: cache
+        // TODO: cache
+        return new Model();
     }
 
     _find(options, isOne) {
-        const parentOptions = this._getParentOptions(options);
+        const parentOptions = this.constructor._getParentOptions(options);
         const method = (isOne)
             ? MODEL_METHOD_FIND_ONE
             : MODEL_METHOD_FIND;
@@ -379,7 +380,7 @@ module.exports = class {
         });
     }
 
-    _getParentOptions(options) {
+    static _getParentOptions(options) {
         let result;
 
         if (options.filter !== undefined
