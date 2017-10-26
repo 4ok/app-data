@@ -6,7 +6,7 @@
     "node": ">=8.4.0"
   },
   "dependencies": {
-    "break-promise": "github:4ok/break-promise.git",
+    "break-promise": "github:4ok/break-promise",
     "joi": "^13.0.1",
     "lodash.get": "^4.4.2",
     "lodash.groupby": "^4.6.0",
