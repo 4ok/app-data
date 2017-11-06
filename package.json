@@ -14,9 +14,9 @@
     "mongojs": "^2.4.1"
   },
   "devDependencies": {
-    "eslint": "^4.9.0",
+    "eslint": "^4.10.0",
     "eslint-config-4ok": "github:4ok/eslint-config-4ok",
-    "eslint-plugin-import": "^2.7.0"
+    "eslint-plugin-import": "^2.8.0"
   },
   "peerDependencies": {
     "config": "^1.27.0"
