@@ -29,6 +29,10 @@ module.exports = class {
             query.limit(options.limit);
         }
 
+        if (options.offset) {
+            query.skip(options.offset);
+        }
+
         return new Promise((resolve, reject) => {
             // eslint-disable-next-line no-underscore-dangle
             query.toArray(this.constructor._onPromiseResult.bind(this, resolve, reject));
